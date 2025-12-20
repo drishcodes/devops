@@ -3,6 +3,7 @@ import '../styles/HeroSection.css';
 
 const About = () => (
   //added comment
+  //added comment
   <section className="hero-container">
     <div className="overlay">
       <div className="hero-text" style={{ maxWidth: 600, animation: 'fadeIn 1.2s ease-in-out' }}>
