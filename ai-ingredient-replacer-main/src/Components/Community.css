@@ -1,0 +1,57 @@
+.community-container {
+    max-width: 1000px;
+    margin: 4rem auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.96);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    text-align: center;
+  }
+  
+  .community-container h2 {
+    font-size: 2rem;
+    color: #00b388;
+  }
+  
+  .subheading {
+    font-size: 1rem;
+    color: #666;
+    margin-bottom: 2rem;
+  }
+  
+  .post-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .post-card {
+    text-align: left;
+    background-color: #f7fcfa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border-left: 6px solid #00b388;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    transition: transform 0.3s ease;
+  }
+  
+  .post-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  .post-card h3 {
+    margin-bottom: 0.5rem;
+    color: #007b5a;
+  }
+  
+  .post-card p {
+    margin-bottom: 0.8rem;
+    color: #444;
+    
+  }
+  
+  .user {
+    font-size: 0.85rem;
+    color: #888;
+  }
+  

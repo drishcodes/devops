@@ -1,0 +1,11 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f4f4f4;
+}
+.loading {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.4rem;
+  color: #555;
+}
