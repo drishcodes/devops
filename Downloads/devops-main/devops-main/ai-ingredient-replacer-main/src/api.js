@@ -10,6 +10,7 @@ const MOOD_MEALS_URL = `${BASE_URL}/mood-meals`;
 const MOOD_STATS_URL = `${BASE_URL}/mood-stats`;
 
 // Create axios instance with default config
+//add cooment
 const api = axios.create({
   baseURL: BASE_URL,
   headers: {
