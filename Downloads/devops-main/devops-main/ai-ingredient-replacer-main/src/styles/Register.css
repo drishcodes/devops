@@ -1,0 +1,67 @@
+/* Main container for the form */
+.auth-container {
+  max-width: 400px;
+  margin: 5rem auto;
+  padding: 2rem;
+  background: #ffffffee;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  text-align: center;
+}
+
+/* Form title */
+.auth-container h2 {
+  color: #00b388;
+  margin-bottom: 1.5rem;
+}
+
+/* Form layout */
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+/* Input fields style */
+.auth-form input {
+  padding: 0.8rem;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+/* Submit button style */
+.auth-form button {
+  background-color: #00b388;
+  color: white;
+  padding: 0.9rem;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+/* Submit button hover effect */
+.auth-form button:hover {
+  background-color: #009e7f;
+}
+
+/* Link to switch between login/register */
+.switch-link {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+}
+
+.switch-link a {
+  color: #00b388;
+  text-decoration: none;
+}
+
+/* Style for the validation error messages */
+.error-message {
+  color: red;
+  font-size: 0.8rem;
+  text-align: left; /* Aligns error text with the start of the input box */
+  margin: -10px 0 0 5px; /* Adjusts spacing to be close to the input field */
+}

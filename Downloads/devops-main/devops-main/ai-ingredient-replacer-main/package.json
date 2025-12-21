@@ -1,0 +1,64 @@
+{
+  "name": "ai-ingredient-replacer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "license": "ISC",
+  "author": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon backend/index.js",
+    "client": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "dependencies": {
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.11.0",
+    "bcryptjs": "^3.0.2",
+    "nodemon": "^3.1.10",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.3",
+    "react-scripts": "^5.0.1",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "autoprefixer": "^10.4.21",
+    "babel-loader": "^10.0.0",
+    "concurrently": "^9.2.1",
+    "css-loader": "^7.1.2",
+    "postcss": "^8.5.6",
+    "style-loader": "^4.0.0",
+    "tailwindcss": "^4.1.11",
+    "webpack": "^5.104.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
