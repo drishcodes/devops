@@ -4,6 +4,105 @@ import { getMoodMealsByMood, trackMoodSelection, updateMoodMealInteraction, getU
 import { AuthContext } from '../context/AuthContext';
 
 /**
+ * Fallback mood-based recipes for when backend is unavailable
+ */
+const fallbackMoodRecipes = {
+  happy: [
+    {
+      _id: 'happy_1',
+      title: 'Celebration Pasta',
+      description: 'A colorful and joyful pasta dish to lift your spirits',
+      recipes: [
+        { title: 'Rainbow Vegetable Pasta', ingredients: ['Pasta', 'Bell peppers', 'Broccoli', 'Carrots'], instructions: ['Cook pasta', 'Sauté vegetables', 'Combine and serve'] },
+        { title: 'Fruit Tart', ingredients: ['Tart shell', 'Mixed berries', 'Cream'], instructions: ['Fill tart', 'Top with fruits', 'Chill and serve'] }
+      ]
+    },
+    {
+      _id: 'happy_2',
+      title: 'Sunshine Smoothie Bowl',
+      description: 'Bright and energizing to match your happy mood',
+      recipes: [
+        { title: 'Tropical Smoothie Bowl', ingredients: ['Mango', 'Pineapple', 'Coconut milk', 'Granola'], instructions: ['Blend fruits', 'Pour in bowl', 'Top with granola'] }
+      ]
+    }
+  ],
+  stressed: [
+    {
+      _id: 'stressed_1',
+      title: 'Comforting Chicken Soup',
+      description: 'Warm and soothing to help you relax',
+      recipes: [
+        { title: 'Classic Chicken Noodle Soup', ingredients: ['Chicken', 'Noodles', 'Carrots', 'Celery', 'Broth'], instructions: ['Cook chicken', 'Add vegetables', 'Simmer with noodles'] }
+      ]
+    },
+    {
+      _id: 'stressed_2',
+      title: 'Herbal Tea with Honey',
+      description: 'Calming herbal infusion to reduce stress',
+      recipes: [
+        { title: 'Chamomile Lavender Tea', ingredients: ['Chamomile', 'Lavender', 'Honey', 'Hot water'], instructions: ['Steep herbs', 'Add honey', 'Enjoy warm'] }
+      ]
+    }
+  ],
+  low: [
+    {
+      _id: 'low_1',
+      title: 'Energy-Boosting Breakfast',
+      description: 'Nutritious meal to restore your energy levels',
+      recipes: [
+        { title: 'Power Oatmeal Bowl', ingredients: ['Oats', 'Banana', 'Nuts', 'Honey'], instructions: ['Cook oats', 'Top with fruits and nuts', 'Drizzle honey'] },
+        { title: 'Green Smoothie', ingredients: ['Spinach', 'Banana', 'Protein powder', 'Almond milk'], instructions: ['Blend all ingredients', 'Serve immediately'] }
+      ]
+    },
+    {
+      _id: 'low_2',
+      title: 'Iron-Rich Salad',
+      description: 'Nutrient-dense to combat fatigue',
+      recipes: [
+        { title: 'Spinach Power Salad', ingredients: ['Spinach', 'Chickpeas', 'Seeds', 'Lemon dressing'], instructions: ['Combine greens', 'Add protein', 'Toss with dressing'] }
+      ]
+    }
+  ],
+  workout: [
+    {
+      _id: 'workout_1',
+      title: 'Protein Power Bowl',
+      description: 'High-protein meal for muscle recovery',
+      recipes: [
+        { title: 'Grilled Chicken Quinoa Bowl', ingredients: ['Chicken breast', 'Quinoa', 'Vegetables', 'Olive oil'], instructions: ['Grill chicken', 'Cook quinoa', 'Combine with vegetables'] },
+        { title: 'Protein Smoothie', ingredients: ['Protein powder', 'Banana', 'Peanut butter', 'Milk'], instructions: ['Blend all ingredients', 'Serve immediately'] }
+      ]
+    },
+    {
+      _id: 'workout_2',
+      title: 'Recovery Wrap',
+      description: 'Balanced nutrients for post-exercise recovery',
+      recipes: [
+        { title: 'Turkey Avocado Wrap', ingredients: ['Turkey', 'Whole wheat tortilla', 'Avocado', 'Vegetables'], instructions: ['Layer ingredients', 'Roll wrap', 'Serve fresh'] }
+      ]
+    }
+  ],
+  sad: [
+    {
+      _id: 'sad_1',
+      title: 'Comfort Mac and Cheese',
+      description: 'Creamy and comforting classic comfort food',
+      recipes: [
+        { title: 'Baked Macaroni and Cheese', ingredients: ['Macaroni', 'Cheddar cheese', 'Milk', 'Butter'], instructions: ['Cook pasta', 'Make cheese sauce', 'Bake until golden'] }
+      ]
+    },
+    {
+      _id: 'sad_2',
+      title: 'Warm Chocolate Cake',
+      description: 'Sweet treat to brighten your mood',
+      recipes: [
+        { title: 'Chocolate Lava Cake', ingredients: ['Dark chocolate', 'Butter', 'Eggs', 'Flour'], instructions: ['Mix ingredients', 'Bake until edges firm', 'Serve warm'] }
+      ]
+    }
+  ]
+};
+
+/**
  * Mapping of custom mood keywords to predefined mood categories.
  */
 const moodKeywords = {
@@ -67,34 +166,39 @@ const MoodSelector = () => {
     setError(null);
     
     try {
-      // Fetch mood-based meal recommendations
+      // Try to fetch mood-based meal recommendations from backend
       const mealData = await getMoodMealsByMood(moodKey);
       
       if (mealData && mealData.length > 0) {
         setRecommendations(mealData);
       } else {
-        setRecommendations([{
-          mood: moodKey,
-          title: `Default ${moodKey} Meal`,
-          description: `We don't have specific recommendations for ${moodKey} yet.`,
-          recipes: []
-        }]);
+        // Use fallback recipes if no data from backend
+        const fallbackRecipes = fallbackMoodRecipes[moodKey] || [];
+        setRecommendations(fallbackRecipes);
       }
       
-      // Track this mood selection
-      const trackData = await trackMoodSelection({
-        mood: moodKey,
-        mealId: mealData && mealData.length > 0 ? mealData[0]._id : null
-      });
-      
-      // Save the stat ID for later interactions
-      if (trackData && trackData.moodStat) {
-        setCurrentStatId(trackData.moodStat._id);
+      // Try to track this mood selection (don't fail if backend is down)
+      try {
+        const trackData = await trackMoodSelection({
+          mood: moodKey,
+          mealId: mealData && mealData.length > 0 ? mealData[0]._id : null
+        });
+        
+        // Save the stat ID for later interactions
+        if (trackData && trackData.moodStat) {
+          setCurrentStatId(trackData.moodStat._id);
+        }
+      } catch (trackErr) {
+        console.log('Backend tracking unavailable, using fallback mode');
+        // Don't set error, just continue without tracking
       }
       
     } catch (err) {
-      console.error('Error fetching mood meals:', err);
-      setError('Failed to load recommendations. Please try again.');
+      console.error('Backend unavailable, using fallback recipes:', err);
+      // Use fallback recipes when backend fails
+      const fallbackRecipes = fallbackMoodRecipes[moodKey] || [];
+      setRecommendations(fallbackRecipes);
+      setError(null); // Clear any error since we have fallback data
     } finally {
       setLoading(false);
     }
@@ -146,29 +250,65 @@ const MoodSelector = () => {
         if (mealData && mealData.length > 0) {
           setRecommendations(mealData);
         } else {
-          // If no specific meals found, create default recommendations
+          // If no specific meals found, create default recommendations with recipes
           setRecommendations([{
+            _id: `custom_${mood}`,
             mood: mood,
-            title: `${mood.charAt(0).toUpperCase() + mood.slice(1)} Meal`,
+            title: `${mood.charAt(0).toUpperCase() + mood.slice(1)} Mood Meal`,
             description: `A balanced meal for when you're feeling ${mood}.`,
-            recipes: []
+            recipes: [
+              { 
+                title: 'Comfort Rice Bowl', 
+                ingredients: ['Rice', 'Mixed vegetables', 'Soy sauce', 'Egg'], 
+                instructions: ['Cook rice', 'Sauté vegetables', 'Add egg', 'Season and serve'] 
+              },
+              { 
+                title: 'Simple Soup', 
+                ingredients: ['Vegetable broth', 'Carrots', 'Celery', 'Onions'], 
+                instructions: ['Chop vegetables', 'Simmer in broth', 'Serve hot'] 
+              }
+            ]
           }]);
         }
         
-        // Track this mood selection
-        const trackData = await trackMoodSelection({
-          mood: mood,
-          mealId: mealData && mealData.length > 0 ? mealData[0]._id : null
-        });
-        
-        // Save the stat ID for later interactions
-        if (trackData && trackData.moodStat) {
-          setCurrentStatId(trackData.moodStat._id);
+        // Try to track this mood selection (don't fail if backend is down)
+        try {
+          const trackData = await trackMoodSelection({
+            mood: mood,
+            mealId: mealData && mealData.length > 0 ? mealData[0]._id : null
+          });
+          
+          // Save the stat ID for later interactions
+          if (trackData && trackData.moodStat) {
+            setCurrentStatId(trackData.moodStat._id);
+          }
+        } catch (trackErr) {
+          console.log('Backend tracking unavailable, using fallback mode');
+          // Don't set error, just continue without tracking
         }
         
       } catch (err) {
-        console.error('Error processing custom mood:', err);
-        setError('Failed to process your mood. Please try again.');
+        console.error('Backend unavailable, using fallback recipes:', err);
+        // Use fallback recipes when backend fails
+        setRecommendations([{
+          _id: `custom_${mood}`,
+          mood: mood,
+          title: `${mood.charAt(0).toUpperCase() + mood.slice(1)} Mood Meal`,
+          description: `A balanced meal for when you're feeling ${mood}.`,
+          recipes: [
+            { 
+              title: 'Comfort Rice Bowl', 
+              ingredients: ['Rice', 'Mixed vegetables', 'Soy sauce', 'Egg'], 
+              instructions: ['Cook rice', 'Sauté vegetables', 'Add egg', 'Season and serve'] 
+            },
+            { 
+              title: 'Simple Soup', 
+              ingredients: ['Vegetable broth', 'Carrots', 'Celery', 'Onions'], 
+              instructions: ['Chop vegetables', 'Simmer in broth', 'Serve hot'] 
+            }
+          ]
+        }]);
+        setError(null); // Clear any error since we have fallback data
       } finally {
         setLoading(false);
       }
@@ -322,11 +462,31 @@ const MoodSelector = () => {
                 {meal.recipes && meal.recipes.length > 0 && (
                   <div className="recipe-list">
                     <h5>Recipes:</h5>
-                    <ul>
-                      {meal.recipes.map((recipe, idx) => (
-                        <li key={idx}>{recipe.title}</li>
-                      ))}
-                    </ul>
+                    {meal.recipes.map((recipe, idx) => (
+                      <div key={idx} className="recipe-item">
+                        <h6>{recipe.title}</h6>
+                        {recipe.ingredients && (
+                          <div className="recipe-ingredients">
+                            <strong>Ingredients:</strong>
+                            <ul>
+                              {recipe.ingredients.map((ingredient, i) => (
+                                <li key={i}>{ingredient}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {recipe.instructions && (
+                          <div className="recipe-instructions">
+                            <strong>Instructions:</strong>
+                            <ol>
+                              {recipe.instructions.map((instruction, i) => (
+                                <li key={i}>{instruction}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
                 <div className="meal-actions">
@@ -362,11 +522,31 @@ const MoodSelector = () => {
                 {meal.recipes && meal.recipes.length > 0 && (
                   <div className="recipe-list">
                     <h5>Recipes:</h5>
-                    <ul>
-                      {meal.recipes.map((recipe, idx) => (
-                        <li key={idx}>{recipe.title}</li>
-                      ))}
-                    </ul>
+                    {meal.recipes.map((recipe, idx) => (
+                      <div key={idx} className="recipe-item">
+                        <h6>{recipe.title}</h6>
+                        {recipe.ingredients && (
+                          <div className="recipe-ingredients">
+                            <strong>Ingredients:</strong>
+                            <ul>
+                              {recipe.ingredients.map((ingredient, i) => (
+                                <li key={i}>{ingredient}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        {recipe.instructions && (
+                          <div className="recipe-instructions">
+                            <strong>Instructions:</strong>
+                            <ol>
+                              {recipe.instructions.map((instruction, i) => (
+                                <li key={i}>{instruction}</li>
+                              ))}
+                            </ol>
+                          </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 )}
                 <div className="saved-badge">Saved</div>

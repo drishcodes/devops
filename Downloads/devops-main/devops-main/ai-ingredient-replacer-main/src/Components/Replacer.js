@@ -58,6 +58,11 @@ Use simple language and emojis where possible.`;
 
       const config = getCurrentProviderConfig();
       
+      // Debug: Log the request details
+      console.log('API URL:', config.BASE_URL);
+      console.log('API Key:', config.API_KEY);
+      console.log('Request body:', JSON.stringify(createGeminiRequest(userMessage, systemPrompt), null, 2));
+      
       const response = await fetch(config.BASE_URL, {
         method: 'POST',
         headers: config.HEADERS,
@@ -71,7 +76,9 @@ Use simple language and emojis where possible.`;
       }
 
       if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('API Error Response:', errorData);
+        throw new Error(`API request failed with status ${response.status}: ${errorData.error?.message || 'Unknown error'}`);
       }
 
       const data = await response.json();

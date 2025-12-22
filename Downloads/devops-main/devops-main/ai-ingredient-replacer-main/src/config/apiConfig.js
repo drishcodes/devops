@@ -5,11 +5,11 @@ export const API_CONFIG = {
   // Gemini API Configuration
   GEMINI: {
     BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-    API_KEY: 'AIzaSyBHpSY5Khp5vwJRsZht2a85rk4YYDzsmgg', // Your Gemini API key
+    API_KEY: 'AIzaSyBN83jfEHf9CNwpKF4AUdRzun6xRu8-A0Q', // Your Gemini API key
     MODEL: 'gemini-2.5-flash',
     HEADERS: {
       'Content-Type': 'application/json',
-      'x-goog-api-key': 'AIzaSyBHpSY5Khp5vwJRsZht2a85rk4YYDzsmgg',
+      'X-goog-api-key': 'AIzaSyBN83jfEHf9CNwpKF4AUdRzun6xRu8-A0Q', // Your Gemini API key
       'Accept': 'application/json'
     }
   },
@@ -34,7 +34,7 @@ export const getCurrentProviderConfig = () => {
   
   // For Gemini, ensure the API key is in both places for convenience
   if (CURRENT_PROVIDER === 'GEMINI') {
-    config.HEADERS['x-goog-api-key'] = config.API_KEY;
+    config.HEADERS['X-goog-api-key'] = config.API_KEY;
   }
   
   return config;
@@ -75,7 +75,7 @@ export const createGeminiRequest = (prompt, systemPrompt = null) => {
       temperature: 0.7,
       topK: 40,
       topP: 0.95,
-      maxOutputTokens: 2048,
+      maxOutputTokens: 1024,
     }
   };
 };

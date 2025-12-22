@@ -22,11 +22,26 @@ export const AuthProvider = ({ children }) => {
           return;
         }
 
-        // Fetch current user data
-        const userData = await getCurrentUser();
-        setUser(userData);
-        setIsLoggedIn(true);
-        setError(null);
+        // Try to fetch current user data from backend
+        try {
+          const userData = await getCurrentUser();
+          setUser(userData);
+          setIsLoggedIn(true);
+          setError(null);
+        } catch (backendErr) {
+          console.log('Backend unavailable, using offline mode');
+          // Backend is not available, use offline mode with user data from localStorage
+          const offlineUser = localStorage.getItem('offlineUser');
+          if (offlineUser && token) {
+            setUser(JSON.parse(offlineUser));
+            setIsLoggedIn(true);
+            setError(null);
+          } else {
+            setIsLoggedIn(false);
+            setUser(null);
+            localStorage.removeItem('token');
+          }
+        }
       } catch (err) {
         console.error('Auth verification failed:', err);
         setError('Session expired. Please login again.');
@@ -47,13 +62,24 @@ export const AuthProvider = ({ children }) => {
     try {
       const userData = await getCurrentUser();
       setUser(userData);
+      // Save user data for offline mode
+      localStorage.setItem('offlineUser', JSON.stringify(userData));
     } catch (err) {
-      console.error('Failed to get user data after login:', err);
+      console.error('Backend unavailable, creating offline user session');
+      // Create offline user session when backend is not available
+      const offlineUserData = {
+        _id: 'offline_user',
+        fullName: 'Offline User',
+        email: 'offline@example.com'
+      };
+      setUser(offlineUserData);
+      localStorage.setItem('offlineUser', JSON.stringify(offlineUserData));
     }
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('offlineUser');
     setIsLoggedIn(false);
     setUser(null);
   };

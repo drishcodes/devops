@@ -99,7 +99,7 @@ const Dashboard = () => {
       // Prepare recipe data
       const recipeData = {
         title: recipeForm.title,
-        description: `Created by ${user.fullName}`,
+        description: `Created by ${user?.fullName || 'User'}`,
         ingredients: ingredientsArray,
         steps: stepsArray
       };
@@ -350,13 +350,13 @@ const Dashboard = () => {
               {/* User Greeting */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 36 }}>
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName || 'User')}&background=00c896&color=fff&size=80`}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(user?.fullName || 'User')}&background=00c896&color=fff&size=80`}
                   alt="User Avatar"
                   style={{ borderRadius: '50%', width: 80, height: 80, boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
                 />
                 <div>
                   <h3 style={{ color: '#00e6a2', margin: 0, fontSize: '1.7rem', fontWeight: 700 }}>
-                    Hello, {user.fullName || 'User'}!
+                    Hello, {user?.fullName || 'User'}!
                   </h3>
                   <p style={{ color: '#b0b8c1', margin: 0, fontSize: '1.1rem' }}>
                     Here’s your personalized dashboard.
