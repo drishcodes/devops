@@ -5,19 +5,17 @@ export const API_CONFIG = {
   // Gemini API Configuration
   GEMINI: {
     BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-    API_KEY: 'AIzaSyBN83jfEHf9CNwpKF4AUdRzun6xRu8-A0Q', // Replace with your actual Gemini API key
+    API_KEY: 'AIzaSyDavuOt7dih_F6jFAs4p6Xco7arhuUVNd0', // Replace with your actual Gemini API key
     MODEL: 'gemini-2.5-flash',
     HEADERS: {
       'Content-Type': 'application/json',
-      'X-goog-api-key': 'AIzaSyBN83jfEHf9CNwpKF4AUdRzun6xRu8-A0Q'
+      'X-goog-api-key': 'AIzaSyDavuOt7dih_F6jFAs4p6Xco7arhuUVNd0'
     }
   },
   //hello
   //hii
   //yess
-  
-  
-  
+  //added a comment
   // OpenRouter API Configuration (for reference)
   OPENROUTER: {
     BASE_URL: 'https://openrouter.ai/api/v1/chat/completions',
