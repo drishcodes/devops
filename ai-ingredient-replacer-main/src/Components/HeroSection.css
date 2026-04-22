@@ -50,9 +50,7 @@
 
 /* === OTHER STYLES FOR CONTEXT === */
 .hero-container {
-  background-image: url('https://t4.ftcdn.net/jpg/04/43/37/07/360_F_443370711_sqHRnSIQovW6uyQ5ZwDpd4kjCG8Q6swm.jpg');
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(135deg, #2c5282 0%, #3182ce 50%, #38b2ac 100%);
   height: 100vh;
   display: flex;
   align-items: center;

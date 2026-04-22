@@ -1,7 +1,6 @@
 /* Full Page Background */
 body {
-  background: url('https://t4.ftcdn.net/jpg/04/43/37/07/360_F_443370711_sqHRnSIQovW6uyQ5ZwDpd4kjCG8Q6swm.jpg') no-repeat center center fixed;
-  background-size: cover;
+  background: #f7fafc;
   margin: 0;
   padding: 0;
   font-family: 'Segoe UI', sans-serif;

@@ -1,16 +1,16 @@
-/* Dashboard.css */
+/* Dashboard.css - Professional Corporate Styling */
 
 body {
     margin: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   }
-  
+
   .dashboard-container {
     display: flex;
     min-height: 100vh;
-    background: linear-gradient(to right, #f0f4f8, #ffffff);
+    background: linear-gradient(to right, #f7fafc, #ffffff);
   }
-  
+
   /* Sidebar */
   .sidebar {
     width: 250px;
@@ -18,28 +18,28 @@ body {
     padding: 30px 20px;
     box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
   }
-  
+
   .sidebar h2 {
-    color: #00bfa6;
+    color: #2c5282;
     margin-bottom: 30px;
     font-size: 24px;
-    font-weight: bold;
+    font-weight: 600;
   }
-  
+
   .sidebar nav a {
     display: block;
-    color: #333;
+    color: #4a5568;
     margin-bottom: 15px;
     text-decoration: none;
     font-weight: 500;
     transition: 0.3s;
   }
-  
+
   .sidebar nav a:hover {
-    color: #00bfa6;
+    color: #3182ce;
     transform: translateX(4px);
   }
-  
+
   /* Main */
   .main-content {
     flex-grow: 1;
@@ -137,11 +137,11 @@ body {
     font-style: italic;
   }
   
-  /* Colors */
-  .teal { border-top: 4px solid #00bfa6; color: #00bfa6; }
-  .yellow { border-top: 4px solid #ffc107; color: #ffc107; }
-  .blue { border-top: 4px solid #007bff; color: #007bff; }
-  .red { border-top: 4px solid #ff4d4f; color: #ff4d4f; }
+  /* Colors - Professional Corporate */
+  .teal { border-top: 4px solid #38b2ac; color: #38b2ac; }
+  .yellow { border-top: 4px solid #ed8936; color: #ed8936; }
+  .blue { border-top: 4px solid #3182ce; color: #3182ce; }
+  .red { border-top: 4px solid #f56565; color: #f56565; }
   
   /* Spinner for loading states */
   .spinner-small {
@@ -162,8 +162,8 @@ body {
   /* Form elements focus styles */
   input:focus, textarea:focus {
     outline: none;
-    border-color: #00c896 !important;
-    box-shadow: 0 0 0 2px rgba(0, 200, 150, 0.2);
+    border-color: #3182ce !important;
+    box-shadow: 0 0 0 2px rgba(49, 130, 206, 0.2);
   }
   
   /* Button hover effects */
@@ -172,7 +172,7 @@ body {
   }
   
   .btn.green:hover:not(:disabled) {
-    background-color: #00d9a0 !important;
+    background-color: #48bb78 !important;
     transform: translateY(-2px);
   }
   

@@ -1,104 +1,142 @@
-import React, { useState } from 'react';
-import '../styles/Chatbot.css'; // Reuse existing chatbot styles
-import { getCurrentProviderConfig, extractResponseContent, createGeminiRequest } from '../config/apiConfig';
+import React, { useState, useRef, useEffect } from 'react';
+import '../styles/Chatbot.css';
+import { getCurrentAIConfig, extractAIResponse, SYSTEM_PROMPTS } from '../config/aiConfig';
 
-/**
- * FoodChatAssistant
- * A responsive AI-powered chatbot for dietary and recipe-related queries.
- * Integrates with Gemini API to stream responses.
- */
 const FoodChatAssistant = () => {
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: '👋 Hi! I’m your AI food assistant. Ask me anything about diet-friendly recipes!'
+      text: '👋 Hi! I\'m your FoodFit assistant. Ask me about recipes, ingredients, dietary advice, or cooking tips!'
     }
   ]);
-
   const [userInput, setUserInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleUserMessage = async () => {
-    if (!userInput.trim()) return;
+    if (!userInput.trim() || loading) return;
 
-    const updatedMessages = [
-      ...messages,
-      { sender: 'user', text: userInput },
+    const userMsg = userInput.trim();
+    setMessages(prev => [
+      ...prev,
+      { sender: 'user', text: userMsg },
       { sender: 'bot', text: 'Thinking... 🤔' }
-    ];
-    setMessages(updatedMessages);
+    ]);
     setUserInput('');
+    setLoading(true);
 
     try {
-      const config = getCurrentProviderConfig();
+      const config = getCurrentAIConfig();
       
-      // Create a simple prompt with system instruction and user input
-      const systemPrompt = "You are an expert AI assistant for ingredient replacement and dietary advice. Only answer questions related to food, recipes, ingredient substitutions, allergies, and healthy cooking. If asked about anything else, politely redirect the user to food-related topics. Answer like a human in simple words, use emojis wherever possible.";
-      
-      const userPrompt = userInput;
+      const messagesForAPI = [
+        { role: 'system', content: SYSTEM_PROMPTS.CHATBOT },
+        ...messages.filter(m => m.sender !== 'bot' || m.text !== 'Thinking... 🤔').map(m => ({
+          role: m.sender === 'user' ? 'user' : 'assistant',
+          content: m.text
+        })),
+        { role: 'user', content: userMsg }
+      ];
 
       const response = await fetch(config.BASE_URL, {
         method: 'POST',
         headers: config.HEADERS,
-        body: JSON.stringify(createGeminiRequest(userPrompt, systemPrompt))
+        body: JSON.stringify({
+          model: config.MODEL,
+          messages: messagesForAPI,
+          temperature: 0.7,
+          max_tokens: 1000,
+        })
       });
 
-      if (response.status === 429) {
-        setMessages(prev => [
-          ...prev.slice(0, -1),
-          { sender: 'bot', text: '⚠️ API call limit exceeded. Try again later.' }
-        ]);
-        return;
-      }
-
       if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+        const errorText = await response.text();
+        console.error('AI API Error:', errorText);
+        throw new Error(`API request failed: ${response.status}`);
       }
 
       const data = await response.json();
-      const reply = extractResponseContent(data);
+      const reply = extractAIResponse(data);
 
       if (reply) {
-        setMessages(prev => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { sender: 'bot', text: reply };
-          return updated;
-        });
+        setMessages(prev => [
+          ...prev.slice(0, -1),
+          { sender: 'bot', text: reply }
+        ]);
       } else {
         setMessages(prev => [
           ...prev.slice(0, -1),
-          { sender: 'bot', text: '❌ Sorry, I could not generate a response. Please try again.' }
+          { sender: 'bot', text: 'Sorry, I couldn\'t generate a response. Please try again.' }
         ]);
       }
-
     } catch (error) {
+      console.error('Chatbot error:', error);
       setMessages(prev => [
         ...prev.slice(0, -1),
-        { sender: 'bot', text: '❌ Sorry, something went wrong. Please try again.' }
+        { sender: 'bot', text: 'I\'m having trouble connecting right now. Please check your internet connection and try again. 🔄' }
       ]);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const clearChat = () => {
+    setMessages([
+      {
+        sender: 'bot',
+        text: '👋 Hi! I\'m your FoodFit AI assistant. Ask me about recipes, ingredients, dietary advice, or cooking tips!'
+      }
+    ]);
   };
 
   return (
     <div className="chatbot-container">
-      <h2>🍽️ Ask Your Recipe Assistant</h2>
+      <div className="chatbot-header">
+        <div className="chatbot-title">
+          <span className="chatbot-emoji">🍽️</span>
+          <h2>FoodFit Assistant</h2>
+        </div>
+        <button onClick={clearChat} className="clear-chat-btn">
+          🔄 New Chat
+        </button>
+      </div>
 
       <div className="chat-window">
         {messages.map((msg, index) => (
           <div key={index} className={`chat-message ${msg.sender}`}>
-            {msg.text}
+            <div className="message-content">
+              {msg.text.split('\n').map((line, i) => (
+                <div key={i}>{line}</div>
+              ))}
+            </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="chat-input">
         <input
           type="text"
-          placeholder="Ask a food-related question..."
+          placeholder="Ask about recipes, ingredients, dietary advice..."
           value={userInput}
           onChange={(e) => setUserInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleUserMessage()}
+          disabled={loading}
         />
-        <button onClick={handleUserMessage}>Send</button>
+        <button 
+          onClick={handleUserMessage} 
+          disabled={loading || !userInput.trim()}
+          className={loading ? 'loading' : ''}
+        >
+          {loading ? '...' : 'Send'}
+        </button>
       </div>
     </div>
   );

@@ -9,7 +9,7 @@
   }
   
   .auth-container h2 {
-    color: #00b388;
+    color: #2c5282;
     margin-bottom: 1.5rem;
   }
   
@@ -27,18 +27,18 @@
   }
   
   .auth-form button {
-    background-color: #00b388;
+    background: linear-gradient(135deg, #3182ce 0%, #38b2ac 100%);
     color: white;
     padding: 0.9rem;
     border: none;
-    border-radius: 10px;
+    border-radius: 8px;
     font-size: 1rem;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: all 0.3s ease;
   }
   
   .auth-form button:hover {
-    background-color: #009e7f;
+    background: linear-gradient(135deg, #2c5282 0%, #3182ce 100%);
   }
   
   .switch-link {
@@ -46,7 +46,6 @@
     font-size: 0.9rem;
   }
   .switch-link a {
-    color: #00b388;
+    color: #3182ce;
     text-decoration: none;
   }
-  

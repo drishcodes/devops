@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import '../styles/Navbar.css';
 import VoiceSearch from './VoiceSearch';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import Modal from './Modal';
 
 /**
@@ -13,6 +14,7 @@ import Modal from './Modal';
  */
 const Navbar = () => {
   const { isLoggedIn, logout } = useContext(AuthContext);
+  const { isDarkMode, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = React.useState(false);
 
@@ -50,11 +52,14 @@ const Navbar = () => {
           // Show all features except Home for logged-in users
           <>
             <li><Link to="/dashboard">Dashboard</Link></li>
+            <li><Link to="/community">Community</Link></li>
             <li><Link to="/replacer">Replacer</Link></li>
             <li><Link to="/chatbot">Chatbot</Link></li>
             <li><Link to="/recipes">Recipes</Link></li>
-            <li><Link to="/community">Community</Link></li>
-            <li><Link to="/shopping">Shopping</Link></li>
+            <li><Link to="/shopping">🛒 Shopping</Link></li>
+            <li><Link to="/meal-planner">📅 Planner</Link></li>
+            <li><Link to="/nutrition">🔬 Nutrition</Link></li>
+            <li><Link to="/timer">⏱ Timer</Link></li>
             <li><Link to="/moodmeals">MoodMeals</Link></li>
           </>
         )}
@@ -62,6 +67,25 @@ const Navbar = () => {
 
       {/* Authentication Buttons (Right Section) */}
       <div className="navbar-right">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: '2px solid #e2e8f0',
+            background: isDarkMode ? '#2d3748' : '#fff',
+            color: isDarkMode ? '#e2e8f0' : '#1a202c',
+            cursor: 'pointer',
+            fontSize: '16px',
+            marginRight: '10px',
+            transition: 'all 0.3s ease'
+          }}
+          title={isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {isDarkMode ? '☀️' : '🌙'}
+        </button>
+
         {/* VoiceSearch: disabled or prompts login if not logged in */}
         <VoiceSearch isLoggedIn={isLoggedIn} onLoginPrompt={handleLoginPrompt} />
         {!isLoggedIn ? (

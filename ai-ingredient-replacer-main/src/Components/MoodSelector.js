@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import '../styles/MoodSelector.css';
-import { getMoodMealsByMood, trackMoodSelection, updateMoodMealInteraction, getUserSavedMeals } from '../api';
+import { getCurrentAIConfig, extractAIResponse } from '../config/aiConfig';
 import { AuthContext } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 
 /**
  * Mapping of custom mood keywords to predefined mood categories.
@@ -21,7 +22,8 @@ const moodKeywords = {
  */
 const MoodSelector = () => {
   const { user } = useContext(AuthContext);
-  
+  const { isDarkMode } = useTheme();
+
   // State for mood selected via buttons
   const [selectedMood, setSelectedMood] = useState('');
 
@@ -30,31 +32,21 @@ const MoodSelector = () => {
 
   // State for food recommendations based on mood
   const [recommendations, setRecommendations] = useState([]);
-  
+
   // Additional state for backend integration
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [savedMeals, setSavedMeals] = useState([]);
-  const [interactions, setInteractions] = useState({});
-  const [currentStatId, setCurrentStatId] = useState(null);
 
   /**
-   * Fetch saved meals on component mount
+   * Load saved meals from localStorage on component mount
    */
   useEffect(() => {
-    const fetchSavedMeals = async () => {
-      try {
-        const meals = await getUserSavedMeals();
-        setSavedMeals(meals);
-      } catch (err) {
-        console.error('Error fetching saved meals:', err);
-      }
-    };
-    
-    if (user) {
-      fetchSavedMeals();
+    const saved = localStorage.getItem('savedMoodMeals');
+    if (saved) {
+      setSavedMeals(JSON.parse(saved));
     }
-  }, [user]);
+  }, []);
 
   /**
    * Handles click on mood button.
@@ -65,36 +57,53 @@ const MoodSelector = () => {
     setCustomMood('');
     setLoading(true);
     setError(null);
-    
+
     try {
-      // Fetch mood-based meal recommendations
-      const mealData = await getMoodMealsByMood(moodKey);
-      
-      if (mealData && mealData.length > 0) {
-        setRecommendations(mealData);
-      } else {
+      const config = getCurrentAIConfig();
+      const prompt = `I'm feeling ${moodKey}. Suggest 3-5 meal options that would be perfect for this mood. For each meal, provide:
+      1. Meal name
+      2. Brief description
+      3. Key ingredients
+      4. Why it's good for this mood
+
+      Be specific and practical. Use emojis for better readability. Do not use asterisks or markdown formatting.`;
+
+      const response = await fetch(config.BASE_URL, {
+        method: 'POST',
+        headers: config.HEADERS,
+        body: JSON.stringify({
+          model: config.MODEL,
+          messages: [
+            { role: 'system', content: 'You are a helpful food and nutrition expert. Provide meal recommendations based on mood. Format responses clearly without markdown or asterisks.' },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 800,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const reply = extractAIResponse(data);
+      const cleanedReply = reply ? reply.replace(/\*/g, '') : '';
+
+      if (cleanedReply) {
         setRecommendations([{
           mood: moodKey,
-          title: `Default ${moodKey} Meal`,
-          description: `We don't have specific recommendations for ${moodKey} yet.`,
+          title: `${moodKey.charAt(0).toUpperCase() + moodKey.slice(1)} Meal Suggestions`,
+          description: cleanedReply,
           recipes: []
         }]);
+      } else {
+        setError('Could not generate meal suggestions. Please try again.');
       }
-      
-      // Track this mood selection
-      const trackData = await trackMoodSelection({
-        mood: moodKey,
-        mealId: mealData && mealData.length > 0 ? mealData[0]._id : null
-      });
-      
-      // Save the stat ID for later interactions
-      if (trackData && trackData.moodStat) {
-        setCurrentStatId(trackData.moodStat._id);
-      }
-      
+
     } catch (err) {
-      console.error('Error fetching mood meals:', err);
-      setError('Failed to load recommendations. Please try again.');
+      console.error('Error generating mood meals:', err);
+      setError('Failed to generate recommendations. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -118,10 +127,10 @@ const MoodSelector = () => {
       setError('Please enter a mood');
       return;
     }
-    
+
     const mood = customMood.toLowerCase();
     let matchedMood = null;
-    
+
     // Check if the custom mood matches any keywords
     for (const [key, keywords] of Object.entries(moodKeywords)) {
       if (keywords.some(keyword => mood.includes(keyword))) {
@@ -129,118 +138,83 @@ const MoodSelector = () => {
         break;
       }
     }
-    
+
     if (matchedMood) {
       // If we found a match, use the predefined mood
       handleMoodClick(matchedMood);
     } else {
-      // Otherwise, use the custom mood directly
+      // Otherwise, use the custom mood directly with AI
       setSelectedMood('');
       setLoading(true);
       setError(null);
-      
+
       try {
-        // Try to find meals for this custom mood
-        const mealData = await getMoodMealsByMood(mood);
-        
-        if (mealData && mealData.length > 0) {
-          setRecommendations(mealData);
-        } else {
-          // If no specific meals found, create default recommendations
+        const config = getCurrentAIConfig();
+        const prompt = `I'm feeling ${mood}. Suggest 3-5 meal options that would be perfect for this mood. For each meal, provide:
+        1. Meal name
+        2. Brief description
+        3. Key ingredients
+        4. Why it's good for this mood
+
+        Be specific and practical. Use emojis for better readability. Do not use asterisks or markdown formatting.`;
+
+        const response = await fetch(config.BASE_URL, {
+          method: 'POST',
+          headers: config.HEADERS,
+          body: JSON.stringify({
+            model: config.MODEL,
+            messages: [
+              { role: 'system', content: 'You are a helpful food and nutrition expert. Provide meal recommendations based on mood. Format responses clearly without markdown or asterisks.' },
+              { role: 'user', content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 800,
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const reply = extractAIResponse(data);
+        const cleanedReply = reply ? reply.replace(/\*/g, '') : '';
+
+        if (cleanedReply) {
           setRecommendations([{
             mood: mood,
-            title: `${mood.charAt(0).toUpperCase() + mood.slice(1)} Meal`,
-            description: `A balanced meal for when you're feeling ${mood}.`,
+            title: `${mood.charAt(0).toUpperCase() + mood.slice(1)} Meal Suggestions`,
+            description: cleanedReply,
             recipes: []
           }]);
+        } else {
+          setError('Could not generate meal suggestions. Please try again.');
         }
-        
-        // Track this mood selection
-        const trackData = await trackMoodSelection({
-          mood: mood,
-          mealId: mealData && mealData.length > 0 ? mealData[0]._id : null
-        });
-        
-        // Save the stat ID for later interactions
-        if (trackData && trackData.moodStat) {
-          setCurrentStatId(trackData.moodStat._id);
-        }
-        
+
       } catch (err) {
-        console.error('Error processing custom mood:', err);
-        setError('Failed to process your mood. Please try again.');
+        console.error('Error generating mood meals:', err);
+        setError('Failed to generate recommendations. Please try again.');
       } finally {
         setLoading(false);
       }
     }
   };
-  
-  /**
-   * Handle liking a meal recommendation
-   */
-  const handleLikeMeal = async (mealId) => {
-    if (!currentStatId) return;
-    
-    try {
-      // Update the interaction in state for immediate UI feedback
-      setInteractions(prev => ({
-        ...prev,
-        [mealId]: { ...prev[mealId], liked: true }
-      }));
-      
-      // Send the update to the backend
-      await updateMoodMealInteraction({
-        statId: currentStatId,
-        liked: true
-      });
-      
-    } catch (err) {
-      console.error('Error liking meal:', err);
-      // Revert the UI change if the API call fails
-      setInteractions(prev => ({
-        ...prev,
-        [mealId]: { ...prev[mealId], liked: false }
-      }));
-    }
-  };
-  
-  /**
-   * Handle saving a meal recommendation
-   */
-  const handleSaveMeal = async (meal) => {
-    if (!currentStatId) return;
-    
-    try {
-      // Update the interaction in state for immediate UI feedback
-      setInteractions(prev => ({
-        ...prev,
-        [meal._id]: { ...prev[meal._id], saved: true }
-      }));
-      
-      // Add to saved meals for immediate UI update
-      setSavedMeals(prev => [...prev, meal]);
-      
-      // Send the update to the backend
-      await updateMoodMealInteraction({
-        statId: currentStatId,
-        saved: true
-      });
-      
-    } catch (err) {
-      console.error('Error saving meal:', err);
-      // Revert the UI changes if the API call fails
-      setInteractions(prev => ({
-        ...prev,
-        [meal._id]: { ...prev[meal._id], saved: false }
-      }));
-      setSavedMeals(prev => prev.filter(m => m._id !== meal._id));
-    }
+
+  const handleSaveMeal = (meal) => {
+    const saved = localStorage.getItem('savedMoodMeals');
+    const savedMealsList = saved ? JSON.parse(saved) : [];
+    savedMealsList.push(meal);
+    localStorage.setItem('savedMoodMeals', JSON.stringify(savedMealsList));
+    setSavedMeals(savedMealsList);
   };
 
   return (
-    <div className="mood-container">
+    <div className="mood-container" style={{
+      background: isDarkMode ? '#1a202c' : '#f7fafc',
+      color: isDarkMode ? '#e2e8f0' : '#1a202c'
+    }}>
       {/* Heading */}
-      <h2>
+      <h2 style={{ color: isDarkMode ? '#00e6a2' : '#2c5282' }}>
         Select or Type Your Mood <span role="img" aria-label="brain">🧠</span>
       </h2>
 
@@ -312,36 +286,40 @@ const MoodSelector = () => {
 
       {/* Display Recommendations */}
       {!loading && recommendations.length > 0 && (
-        <div className="recommendations">
-          <h3>Recommended for {selectedMood || customMood}</h3>
+        <div className="recommendations" style={{
+          backgroundColor: isDarkMode ? '#2d3748' : '#fff',
+          borderColor: isDarkMode ? '#4a5568' : '#e2e8f0'
+        }}>
+          <h3 style={{ color: isDarkMode ? '#00e6a2' : '#2c5282' }}>Recommended for {selectedMood || customMood}</h3>
           <div className="meal-cards">
             {recommendations.map((meal, index) => (
-              <div key={index} className="meal-card">
-                <h4>{meal.title}</h4>
-                <p>{meal.description}</p>
+              <div key={index} className="meal-card" style={{
+                backgroundColor: isDarkMode ? '#1a202c' : '#fff',
+                borderColor: isDarkMode ? '#4a5568' : '#e2e8f0'
+              }}>
+                <h4 style={{ color: isDarkMode ? '#00e6a2' : '#2c5282' }}>{meal.title}</h4>
+                <p style={{ whiteSpace: 'pre-line', lineHeight: '1.6', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>{meal.description}</p>
                 {meal.recipes && meal.recipes.length > 0 && (
                   <div className="recipe-list">
-                    <h5>Recipes:</h5>
+                    <h5 style={{ color: isDarkMode ? '#b0b8c1' : '#718096' }}>Recipes:</h5>
                     <ul>
                       {meal.recipes.map((recipe, idx) => (
-                        <li key={idx}>{recipe.title}</li>
+                        <li key={idx} style={{ color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>{recipe.title}</li>
                       ))}
                     </ul>
                   </div>
                 )}
                 <div className="meal-actions">
-                  <button 
-                    className={`action-btn like-btn ${interactions[meal._id]?.liked ? 'active' : ''}`}
-                    onClick={() => handleLikeMeal(meal._id)}
-                  >
-                    {interactions[meal._id]?.liked ? '❤️ Liked' : '🤍 Like'}
-                  </button>
-                  <button 
-                    className={`action-btn save-btn ${interactions[meal._id]?.saved ? 'active' : ''}`}
+                  <button
+                    className="action-btn save-btn"
                     onClick={() => handleSaveMeal(meal)}
-                    disabled={interactions[meal._id]?.saved}
+                    style={{
+                      backgroundColor: isDarkMode ? '#2d3748' : '#f7fafc',
+                      color: isDarkMode ? '#e2e8f0' : '#2c5282',
+                      borderColor: isDarkMode ? '#4a5568' : '#e2e8f0'
+                    }}
                   >
-                    {interactions[meal._id]?.saved ? '✅ Saved' : '💾 Save'}
+                    💾 Save
                   </button>
                 </div>
               </div>
@@ -352,19 +330,25 @@ const MoodSelector = () => {
       
       {/* Saved Meals Section */}
       {savedMeals.length > 0 && (
-        <div className="saved-meals">
-          <h3>Your Saved Meals</h3>
+        <div className="saved-meals" style={{
+          backgroundColor: isDarkMode ? '#2d3748' : '#fff',
+          borderColor: isDarkMode ? '#4a5568' : '#e2e8f0'
+        }}>
+          <h3 style={{ color: isDarkMode ? '#00e6a2' : '#2c5282' }}>Your Saved Meals</h3>
           <div className="meal-cards">
             {savedMeals.map((meal, index) => (
-              <div key={index} className="meal-card saved">
-                <h4>{meal.title}</h4>
-                <p>{meal.description}</p>
+              <div key={index} className="meal-card saved" style={{
+                backgroundColor: isDarkMode ? '#1a202c' : '#fff',
+                borderColor: isDarkMode ? '#00e6a2' : '#3182ce'
+              }}>
+                <h4 style={{ color: isDarkMode ? '#00e6a2' : '#2c5282' }}>{meal.title}</h4>
+                <p style={{ color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>{meal.description}</p>
                 {meal.recipes && meal.recipes.length > 0 && (
                   <div className="recipe-list">
-                    <h5>Recipes:</h5>
+                    <h5 style={{ color: isDarkMode ? '#b0b8c1' : '#718096' }}>Recipes:</h5>
                     <ul>
                       {meal.recipes.map((recipe, idx) => (
-                        <li key={idx}>{recipe.title}</li>
+                        <li key={idx} style={{ color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>{recipe.title}</li>
                       ))}
                     </ul>
                   </div>

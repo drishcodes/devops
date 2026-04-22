@@ -2,30 +2,30 @@
 // This file centralizes API settings to make it easy to switch between providers
 
 export const API_CONFIG = {
-  // Gemini API Configuration
-  GEMINI: {
-    BASE_URL: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-    API_KEY: 'AIzaSyBqFpJHY9AVcMg05ECQiAk-jzM5qArEepM', // Replace with your actual Gemini API key
-    MODEL: 'gemini-2.0-flash',
+  // Mock API Configuration (For testing when real APIs fail)
+  MOCK: {
+    BASE_URL: 'mock://api',
+    API_KEY: 'mock',
+    MODEL: 'mock',
     HEADERS: {
-      'Content-Type': 'application/json',
-      'X-goog-api-key': 'AIzaSyBqFpJHY9AVcMg05ECQiAk-jzM5qArEepM'
+      'Content-Type': 'application/json'
     }
   },
   
   // OpenRouter API Configuration (for reference)
   OPENROUTER: {
     BASE_URL: 'https://openrouter.ai/api/v1/chat/completions',
-    API_KEY: 'YOUR_OPENROUTER_API_KEY_HERE',
-    MODEL: 'deepseek/deepseek-chat-v3-0324:free',
+    API_KEY: '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',
+    MODEL: '',
     HEADERS: {
       'Content-Type': 'application/json',
+      'Authorization': 'Bearer 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'
     }
   }
 };
 
 // Current provider - change this to switch between providers
-export const CURRENT_PROVIDER = 'GEMINI';
+export const CURRENT_PROVIDER = 'MOCK';
 
 // Helper function to get current provider config
 export const getCurrentProviderConfig = () => {
@@ -34,7 +34,10 @@ export const getCurrentProviderConfig = () => {
   // For Gemini, ensure the API key is in both places for convenience
   if (CURRENT_PROVIDER === 'GEMINI') {
     config.HEADERS['X-goog-api-key'] = config.API_KEY;
+  } else if (CURRENT_PROVIDER === 'OPENROUTER') {
+    config.HEADERS['Authorization'] = `Bearer ${config.API_KEY}`;
   }
+  // Mock API doesn't need special headers
   
   return config;
 };
@@ -85,6 +88,8 @@ export const extractResponseContent = (response, provider = CURRENT_PROVIDER) =>
     return response.candidates?.[0]?.content?.parts?.[0]?.text || '';
   } else if (provider === 'OPENROUTER') {
     return response.choices?.[0]?.message?.content || '';
+  } else if (provider === 'MOCK') {
+    return response; // Mock returns direct text
   }
   return '';
 };

@@ -26,6 +26,7 @@ app.use('/api/activity', activityLogRoutes);
 app.use('/api/suggestions', suggestionRoutes);
 app.use('/api/mood-meals', moodMealRoutes);
 app.use('/api/mood-stats', moodMealStatsRoutes);
+app.use('/api/community', require('./routes/communityRoutes'));
 
 // User count endpoint
 app.get('/api/users/count', async (req, res) => {

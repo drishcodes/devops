@@ -1,19 +1,20 @@
 import React, { useEffect, useState, useContext } from 'react';
 import '../styles/HeroSection.css';
 import '../styles/MoodAnalytics.css';
-import { 
-  getDashboardMetrics, 
-  getRecipeCount, 
-  getUserCount, 
-  addRecipe, 
-  deleteRecipe, 
-  updateRecipe, 
+import {
+  getDashboardMetrics,
+  getRecipeCount,
+  getUserCount,
+  addRecipe,
+  deleteRecipe,
+  updateRecipe,
   getAllRecipes,
   getRecentActivity,
   getDailySuggestion,
   getAllMoodMeals
 } from '../api';
 import { AuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Loader from './Loader';
 import MoodAnalytics from './MoodAnalytics';
 
@@ -38,6 +39,7 @@ const DIETARY_OPTIONS = [
 
 const Dashboard = () => {
   const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [recipeCount, setRecipeCount] = useState(null);
   const [userCount, setUserCount] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -363,6 +365,47 @@ const Dashboard = () => {
                   </p>
                 </div>
               </div>
+              {/* Quick Access - New Features */}
+              <div style={{ marginBottom: 32 }}>
+                <h3 style={{ color: '#00e6a2', marginBottom: 16, fontSize: '1.2rem' }}>✨ Explore New Features</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12 }}>
+                  {[
+                    { path: '/trivia', emoji: '🧠', label: 'Food Trivia', desc: 'Test your food knowledge!' },
+                    { path: '/meal-planner', emoji: '📅', label: 'Meal Planner', desc: 'Plan your week' },
+                    { path: '/nutrition', emoji: '🔬', label: 'Nutrition', desc: 'Analyze your food' },
+                    { path: '/timer', emoji: '⏱️', label: 'Cooking Timer', desc: 'Never overcook again' },
+                  ].map(f => (
+                    <div
+                      key={f.path}
+                      onClick={() => navigate(f.path)}
+                      style={{
+                        background: 'linear-gradient(135deg, #232b33, #1a232a)',
+                        border: '1px solid #333',
+                        borderRadius: 12,
+                        padding: '16px 12px',
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={e => {
+                        e.currentTarget.style.transform = 'translateY(-3px)';
+                        e.currentTarget.style.borderColor = '#00e6a2';
+                        e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,200,150,0.15)';
+                      }}
+                      onMouseLeave={e => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.borderColor = '#333';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }}
+                    >
+                      <div style={{ fontSize: '28px', marginBottom: 6 }}>{f.emoji}</div>
+                      <div style={{ color: '#00e6a2', fontWeight: 600, fontSize: '14px', marginBottom: 2 }}>{f.label}</div>
+                      <div style={{ color: '#888', fontSize: '11px' }}>{f.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 36 }}>
                 {/* Dietary Preferences Section */}
                 <div style={{
@@ -673,7 +716,7 @@ const Dashboard = () => {
                     <button 
                       className="btn green" 
                       style={{ marginTop: 16, padding: '6px 18px', fontSize: '0.9em' }}
-                      onClick={() => window.alert('Calendar feature coming soon!')}
+                      onClick={() => navigate('/meal-planner')}
                     >
                       Plan Meals
                     </button>

@@ -4,6 +4,7 @@ import Navbar from './Components/Navbar';
 import Loader from './Components/Loader';
 import ProtectedRoute from './Components/ProtectedRoute';
 import { AuthProvider, AuthContext } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Lazy load components
 const HeroSection = lazy(() => import('./Components/HeroSection'));
@@ -19,6 +20,9 @@ const MoodSelector = lazy(() => import('./Components/MoodSelector'));
 const Dashboard = lazy(() => import('./Components/Dashboard'));
 const About = lazy(() => import('./Components/About'));
 const Contact = lazy(() => import('./Components/Contact'));
+const MealPlanner = lazy(() => import('./Components/MealPlanner'));
+const NutritionAnalyzer = lazy(() => import('./Components/NutritionAnalyzer'));
+const CookingTimer = lazy(() => import('./Components/CookingTimer'));
 
 
 function AppRoutes() {
@@ -80,6 +84,21 @@ function AppRoutes() {
             <MoodSelector />
           </ProtectedRoute>
         } />
+        <Route path="/meal-planner" element={
+          <ProtectedRoute>
+            <MealPlanner />
+          </ProtectedRoute>
+        } />
+        <Route path="/nutrition" element={
+          <ProtectedRoute>
+            <NutritionAnalyzer />
+          </ProtectedRoute>
+        } />
+        <Route path="/timer" element={
+          <ProtectedRoute>
+            <CookingTimer />
+          </ProtectedRoute>
+        } />
         
         {/* Fallback route - redirect to dashboard if logged in, otherwise to home */}
         <Route path="*" element={isLoggedIn ? <Navigate to="/dashboard" replace /> : <Navigate to="/" replace />} />
@@ -90,12 +109,14 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <Navbar />
-        <AppRoutes />
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          <Navbar />
+          <AppRoutes />
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

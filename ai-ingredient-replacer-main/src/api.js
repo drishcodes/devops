@@ -8,6 +8,7 @@ const ACTIVITY_URL = `${BASE_URL}/activity`;
 const SUGGESTIONS_URL = `${BASE_URL}/suggestions`;
 const MOOD_MEALS_URL = `${BASE_URL}/mood-meals`;
 const MOOD_STATS_URL = `${BASE_URL}/mood-stats`;
+const COMMUNITY_URL = `${BASE_URL}/community`;
 
 // Create axios instance with default config
 const api = axios.create({
@@ -243,4 +244,33 @@ export const getMoodAnalytics = async () => {
     throw error.response?.data || error;
   }
 };
+
+// Community endpoints
+export const getAllCommunityPosts = async () => {
+  try {
+    const response = await api.get(COMMUNITY_URL);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const createCommunityPost = async (postData) => {
+  try {
+    const response = await api.post(COMMUNITY_URL, postData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+export const likeCommunityPost = async (postId) => {
+  try {
+    const response = await api.put(`${COMMUNITY_URL}/${postId}/like`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
   

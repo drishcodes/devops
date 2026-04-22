@@ -81,7 +81,7 @@ exports.getUserMoodStats = async (req, res) => {
     
     // Get mood selection counts
     const moodCounts = await MoodMealStats.aggregate([
-      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: '$mood', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ]);
@@ -128,7 +128,7 @@ exports.getMoodAnalytics = async (req, res) => {
     
     // Get top mood
     const topMood = await MoodMealStats.aggregate([
-      { $match: { user: mongoose.Types.ObjectId(userId) } },
+      { $match: { user: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: '$mood', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 1 }
@@ -150,7 +150,7 @@ exports.getMoodAnalytics = async (req, res) => {
     const moodTrend = await MoodMealStats.aggregate([
       { 
         $match: { 
-          user: mongoose.Types.ObjectId(userId),
+          user: new mongoose.Types.ObjectId(userId),
           createdAt: { $gte: sevenDaysAgo }
         } 
       },

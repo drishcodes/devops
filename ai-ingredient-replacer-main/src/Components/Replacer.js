@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
 import '../styles/Replacer.css';
-import { getCurrentProviderConfig, extractResponseContent, createGeminiRequest } from '../config/apiConfig';
+import { SUBSTITUTIONS, findSubstitutions } from '../data/foodData';
+import { getCurrentAIConfig, extractAIResponse, SYSTEM_PROMPTS } from '../config/aiConfig';
 
 const Replacer = () => {
   const [recipe, setRecipe] = useState('');
   const [preferences, setPreferences] = useState({
-    vegan: false,
-    nutFree: false,
-    glutenFree: false,
     dairyFree: false,
+    glutenFree: false,
     eggFree: false,
     sugarFree: false,
+    nutFree: false,
+    vegan: false,
   });
 
   const [output, setOutput] = useState('');
   const [explanations, setExplanations] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [aiResponse, setAiResponse] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
 
   const handleCheckboxChange = (e) => {
     setPreferences({
@@ -24,7 +27,17 @@ const Replacer = () => {
     });
   };
 
-  const handleReplace = async () => {
+  // Map checkbox names to substitution database keys
+  const prefToCategory = {
+    dairyFree: 'dairy',
+    glutenFree: 'gluten',
+    eggFree: 'egg',
+    sugarFree: 'sugar',
+    nutFree: 'nut',
+    vegan: 'dairy', // vegan includes dairy-free
+  };
+
+  const handleReplace = () => {
     if (!recipe.trim()) {
       setOutput('Please enter a recipe.');
       setExplanations([]);
@@ -35,74 +48,70 @@ const Replacer = () => {
     setOutput('');
     setExplanations([]);
 
-    try {
-      const userPrefs = [];
-      if (preferences.vegan) userPrefs.push('vegan');
-      if (preferences.nutFree) userPrefs.push('nut-free');
-      if (preferences.glutenFree) userPrefs.push('gluten-free');
-      if (preferences.dairyFree) userPrefs.push('dairy-free');
-      if (preferences.eggFree) userPrefs.push('egg-free');
-      if (preferences.sugarFree) userPrefs.push('sugar-free');
+    // Simulate a small delay
+    setTimeout(() => {
+      const activePrefs = Object.entries(preferences)
+        .filter(([_, checked]) => checked)
+        .map(([key]) => key);
 
-      const systemPrompt = `You are an expert AI ingredient replacer. Given a recipe and dietary preferences (${userPrefs.join(", ") || 'none'}), return the modified recipe with smart ingredient substitutions. After the recipe, provide a short bullet list of what was replaced and why. Only change ingredients that conflict with the preferences. Format the output as:
-
-Modified Recipe:
-<recipe>
-
-Replacements Made:
-- <explanation1>
-- <explanation2>
-Use simple language and emojis where possible.`;
-
-      const userMessage = `Recipe:\n${recipe}\n\nPreferences: ${userPrefs.length > 0 ? userPrefs.join(", ") : 'none'}`;
-
-      const config = getCurrentProviderConfig();
-      
-      const response = await fetch(config.BASE_URL, {
-        method: 'POST',
-        headers: config.HEADERS,
-        body: JSON.stringify(createGeminiRequest(userMessage, systemPrompt))
-      });
-
-      if (response.status === 429) {
-        setOutput('API call limit exceeded');
-        setExplanations([]);
+      if (activePrefs.length === 0) {
+        setOutput(recipe);
+        setExplanations(['No dietary restrictions selected — recipe unchanged.']);
+        setLoading(false);
         return;
       }
 
-      if (!response.ok) {
-        throw new Error(`API request failed with status ${response.status}`);
+      let modifiedRecipe = recipe;
+      const replacementsMade = [];
+
+      // Process each active dietary preference
+      for (const pref of activePrefs) {
+        const category = prefToCategory[pref];
+        if (!category || !SUBSTITUTIONS[category]) continue;
+
+        const categorySubs = SUBSTITUTIONS[category];
+
+        for (const [ingredient, subs] of Object.entries(categorySubs)) {
+          // Check if the ingredient appears in the recipe
+          const ingredientRegex = new RegExp(`\\b${ingredient}\\b`, 'gi');
+          if (ingredientRegex.test(modifiedRecipe)) {
+            const bestSub = subs[0]; // Use the first (best) substitution
+            modifiedRecipe = modifiedRecipe.replace(ingredientRegex, bestSub.sub);
+            replacementsMade.push(
+              `${ingredient} → ${bestSub.sub} (${bestSub.ratio}) — ${bestSub.tip}`
+            );
+          }
+        }
+
+        // Vegan also needs egg substitutions
+        if (pref === 'vegan' && SUBSTITUTIONS.egg) {
+          for (const [ingredient, subs] of Object.entries(SUBSTITUTIONS.egg)) {
+            const ingredientRegex = new RegExp(`\\b${ingredient}\\b`, 'gi');
+            if (ingredientRegex.test(modifiedRecipe)) {
+              const bestSub = subs[0];
+              modifiedRecipe = modifiedRecipe.replace(ingredientRegex, bestSub.sub);
+              replacementsMade.push(
+                `${ingredient} → ${bestSub.sub} (${bestSub.ratio}) — ${bestSub.tip}`
+              );
+            }
+          }
+        }
       }
 
-      const data = await response.json();
-      const reply = extractResponseContent(data) || 'Sorry, could not generate a response.';
+      setOutput(modifiedRecipe);
+      setExplanations(replacementsMade);
 
-      // Parse reply into modified recipe and explanation list
-      const [, modRecipe, , ...exps] = reply.split(/Modified Recipe:|Replacements Made:/);
-      setOutput(modRecipe ? modRecipe.trim() : reply.trim());
-      setExplanations(
-        exps.length > 0
-          ? exps.join('').split(/\n|\u2022|-/).map(s => s.trim()).filter(Boolean)
-          : []
-      );
-
-      // --- Track replaced recipe in localStorage ---
+      // Track in localStorage
       const replacerHistory = JSON.parse(localStorage.getItem('replacerHistory')) || [];
       const newEntry = {
-        title: (modRecipe ? modRecipe.split('\n')[0] : 'Untitled Recipe') || 'Untitled Recipe',
+        title: modifiedRecipe.split('\n')[0] || 'Untitled Recipe',
         date: new Date().toISOString(),
       };
       const updatedHistory = [newEntry, ...replacerHistory].slice(0, 10);
       localStorage.setItem('replacerHistory', JSON.stringify(updatedHistory));
-      // --- End tracking ---
 
-    } catch (err) {
-      console.error(err);
-      setOutput('Sorry, something went wrong.');
-      setExplanations([]);
-    } finally {
       setLoading(false);
-    }
+    }, 500);
   };
 
   const saveRecipeToLocalStorage = () => {
@@ -111,7 +120,6 @@ Use simple language and emojis where possible.`;
       return;
     }
     const saved = JSON.parse(localStorage.getItem('savedRecipes')) || [];
-
     const newRecipe = {
       id: Date.now(),
       title: output.split('\n')[0] || 'Untitled Recipe',
@@ -121,6 +129,90 @@ Use simple language and emojis where possible.`;
     saved.push(newRecipe);
     localStorage.setItem('savedRecipes', JSON.stringify(saved));
     alert('Recipe saved!');
+  };
+
+  const getAIReplacement = async () => {
+    if (!recipe.trim() || aiLoading) return;
+
+    const activePrefs = Object.entries(preferences)
+      .filter(([_, checked]) => checked)
+      .map(([key]) => key);
+
+    if (activePrefs.length === 0) {
+      setAiResponse('Please select at least one dietary preference.');
+      return;
+    }
+
+    setAiLoading(true);
+    setAiResponse('Thinking... 🤔');
+
+    try {
+      const config = getCurrentAIConfig();
+      const prefText = activePrefs.map(p => p.replace(/([A-Z])/g, ' $1').toLowerCase()).join(', ');
+      const prompt = `I have a recipe that needs ingredient substitutions for the following dietary restrictions: ${prefText}.
+
+Recipe:
+${recipe}
+
+Please:
+1. Identify ingredients that need substitution
+2. Suggest appropriate substitutions with ratios
+3. Explain why each substitution works
+4. Provide the complete modified recipe
+5. Add tips for best results
+
+Be specific about ratios and cooking adjustments. Use emojis for better readability. Format the response clearly with sections for substitutions, modified recipe, and tips. Do not use asterisks or markdown formatting.`;
+
+      const response = await fetch(config.BASE_URL, {
+        method: 'POST',
+        headers: config.HEADERS,
+        body: JSON.stringify({
+          model: config.MODEL,
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPTS.REPLACER },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const reply = extractAIResponse(data);
+      const cleanedReply = reply ? reply.replace(/\*/g, '') : '';
+
+      if (cleanedReply) {
+        setAiResponse(cleanedReply);
+      } else {
+        setAiResponse('Could not generate replacement. Please try again.');
+      }
+    } catch (error) {
+      console.error('AI Replacement error:', error);
+      setAiResponse('Unable to connect to AI service. Using local replacement only.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleSaveMeal = () => {
+    if (!aiResponse.trim()) return;
+
+    const savedRecipes = JSON.parse(localStorage.getItem('myRecipes')) || [];
+    const newRecipe = {
+      title: `AI Generated Recipe - ${new Date().toLocaleDateString()}`,
+      ingredients: recipe,
+      instructions: aiResponse,
+      createdAt: new Date().toISOString(),
+      fromReplacer: true,
+      synced: false
+    };
+    savedRecipes.unshift(newRecipe);
+    localStorage.setItem('myRecipes', JSON.stringify(savedRecipes));
+    alert('Recipe saved to dashboard!');
   };
 
   const sampleRecipesLeft = [
@@ -184,7 +276,7 @@ Use simple language and emojis where possible.`;
       </div>
 
       <div className="replacer-container">
-        <h2>AI Ingredient Replacer</h2>
+        <h2>🔄 Ingredient Replacer</h2>
 
         <textarea
           placeholder="Paste your recipe here..."
@@ -207,8 +299,8 @@ Use simple language and emojis where possible.`;
           ))}
         </div>
 
-        <button onClick={handleReplace} disabled={loading}>
-          {loading ? 'Replacing...' : 'Replace Ingredients'}
+        <button onClick={getAIReplacement} disabled={aiLoading || !recipe.trim()}>
+          {aiLoading ? '🤔 Analyzing...' : '🤖 Smart Replacement'}
         </button>
 
         {output && (
@@ -227,6 +319,50 @@ Use simple language and emojis where possible.`;
                 <li key={idx}>{exp}</li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {aiResponse && (
+          <div style={{
+            marginTop: '25px',
+            padding: '25px',
+            background: '#fff',
+            borderRadius: '12px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 4px 15px rgba(44, 82, 130, 0.08)'
+          }}>
+            <h3 style={{ margin: '0 0 15px 0', color: '#2c5282', fontSize: '1.2rem', fontWeight: '600' }}>
+              🤖 Smart Replacement
+            </h3>
+            <div style={{
+              whiteSpace: 'pre-line',
+              lineHeight: '1.7',
+              color: '#1a202c',
+              fontSize: '14px',
+              background: '#fff',
+              padding: '20px',
+              borderRadius: '8px',
+              border: '1px solid #e2e8f0'
+            }}>
+              {aiResponse}
+            </div>
+            <button
+              onClick={handleSaveMeal}
+              style={{
+                marginTop: '15px',
+                padding: '10px 20px',
+                borderRadius: '8px',
+                border: 'none',
+                background: 'linear-gradient(135deg, #3182ce, #38b2ac)',
+                color: '#fff',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              💾 Save to Dashboard
+            </button>
           </div>
         )}
       </div>
