@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const JWT_SECRET = "your_secret_key"; // Use env var in production
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key"; // Use env var in production
 
 module.exports = function (req, res, next) {
   const authHeader = req.header('Authorization');

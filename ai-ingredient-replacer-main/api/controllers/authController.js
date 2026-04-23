@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs"); //Hash passwords securely.
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
-const JWT_SECRET = "your_secret_key"; // Replace with env var in prod
+const JWT_SECRET = process.env.JWT_SECRET || "your_secret_key"; // Use env var in prod
 
 exports.register = async (req, res) => {
   try {
