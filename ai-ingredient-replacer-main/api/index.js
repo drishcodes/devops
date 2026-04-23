@@ -61,9 +61,14 @@ const connectToDatabase = async () => {
 };
 
 // Export as Vercel serverless function
-module.exports = async (req, res) => {
-  await connectToDatabase();
-  return app(req, res);
+module.exports = (req, res) => {
+  // Connect to database before handling request
+  connectToDatabase().then(() => {
+    app(req, res);
+  }).catch(err => {
+    console.error('Database connection error:', err);
+    res.status(500).json({ message: 'Server error' });
+  });
 };
 
 // Also export the app for local testing
