@@ -10,8 +10,11 @@ export const ThemeProvider = ({ children }) => {
 
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
-    document.body.style.backgroundColor = isDarkMode ? '#1a202c' : '#f7fafc';
-    document.body.style.color = isDarkMode ? '#e2e8f0' : '#1a202c';
+    if (isDarkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
   }, [isDarkMode]);
 
   const toggleTheme = () => {

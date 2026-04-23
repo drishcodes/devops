@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import Loader from './Loader';
 import MoodAnalytics from './MoodAnalytics';
 
-const API_BASE = 'http://localhost:5000/api'; // Change if needed
+const API_BASE = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:5000/api';
 const DASHBOARD_BG = 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=1500&q=80'; // Cooking/ingredients bg
 
 const cardIcons = [
