@@ -11,3 +11,13 @@ services:
         sync: false
       - key: PORT
         value: 10000
+      - key: NODE_ENV
+        value: production
+  - type: web
+    name: foodfit-frontend
+    env: static
+    buildCommand: CI=false npm run build
+    publishPath: build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://foodfit-backend.onrender.com
