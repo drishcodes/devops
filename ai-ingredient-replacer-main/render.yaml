@@ -3,9 +3,8 @@ services:
     name: foodfit-backend
     env: node
     plan: free
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: node index.js
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node index.js
     envVars:
       - key: MONGODB_URI
         sync: false
