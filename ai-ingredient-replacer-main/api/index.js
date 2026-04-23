@@ -19,17 +19,17 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("/auth", authRoutes);
-app.use("/recipes", recipeRoutes);
-app.use('/dashboard', dashboardRoutes);
-app.use('/activity', activityLogRoutes);
-app.use('/suggestions', suggestionRoutes);
-app.use('/mood-meals', moodMealRoutes);
-app.use('/mood-stats', moodMealStatsRoutes);
-app.use('/community', require('../backend/routes/communityRoutes'));
+app.use("/api/auth", authRoutes);
+app.use("/api/recipes", recipeRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/activity', activityLogRoutes);
+app.use('/api/suggestions', suggestionRoutes);
+app.use('/api/mood-meals', moodMealRoutes);
+app.use('/api/mood-stats', moodMealStatsRoutes);
+app.use('/api/community', require('../backend/routes/communityRoutes'));
 
 // User count endpoint
-app.get('/users/count', async (req, res) => {
+app.get('/api/users/count', async (req, res) => {
   try {
     const count = await User.countDocuments();
     res.json({ count });
