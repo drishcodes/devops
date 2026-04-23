@@ -1,16 +1,16 @@
 const express = require("express");
-const connectDB = require("./config/db");
-const authRoutes = require("./routes/authRoutes");
+const connectDB = require("../backend/config/db");
+const authRoutes = require("../backend/routes/authRoutes");
 const cors = require("cors");
-const recipeRoutes = require('./routes/recipeRoutes');
-const User = require('./models/User');
-const dashboardRoutes = require('./routes/dashboardRoutes');
-const activityLogRoutes = require('./routes/activityLogRoutes');
-const suggestionRoutes = require('./routes/suggestionRoutes');
-const moodMealRoutes = require('./routes/moodMealRoutes');
-const moodMealStatsRoutes = require('./routes/moodMealStatsRoutes');
-const { createDefaultSuggestion } = require('./controllers/suggestionController');
-const { createDefaultMoodMeals } = require('./controllers/moodMealController');
+const recipeRoutes = require('../backend/routes/recipeRoutes');
+const User = require('../backend/models/User');
+const dashboardRoutes = require('../backend/routes/dashboardRoutes');
+const activityLogRoutes = require('../backend/routes/activityLogRoutes');
+const suggestionRoutes = require('../backend/routes/suggestionRoutes');
+const moodMealRoutes = require('../backend/routes/moodMealRoutes');
+const moodMealStatsRoutes = require('../backend/routes/moodMealStatsRoutes');
+const { createDefaultSuggestion } = require('../backend/controllers/suggestionController');
+const { createDefaultMoodMeals } = require('../backend/controllers/moodMealController');
 
 const app = express();
 
@@ -26,7 +26,7 @@ app.use('/api/activity', activityLogRoutes);
 app.use('/api/suggestions', suggestionRoutes);
 app.use('/api/mood-meals', moodMealRoutes);
 app.use('/api/mood-stats', moodMealStatsRoutes);
-app.use('/api/community', require('./routes/communityRoutes'));
+app.use('/api/community', require('../backend/routes/communityRoutes'));
 
 // User count endpoint
 app.get('/api/users/count', async (req, res) => {

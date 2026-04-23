@@ -14,9 +14,10 @@
     }
   ],
   "functions": {
-    "api/**/*.js": {
+    "api/index.js": {
       "memory": 1024,
       "maxDuration": 10
     }
-  }
+  },
+  "includedFiles": ["backend/**"]
 }
