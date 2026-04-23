@@ -43,7 +43,6 @@ let isConnected = false;
 
 const connectToDatabase = async () => {
   if (isConnected) {
-    console.log('Using existing database connection');
     return;
   }
   
@@ -57,18 +56,19 @@ const connectToDatabase = async () => {
     await createDefaultMoodMeals();
   } catch (error) {
     console.error('Database connection error:', error);
+    throw error;
   }
 };
 
 // Export as Vercel serverless function
-module.exports = (req, res) => {
-  // Connect to database before handling request
-  connectToDatabase().then(() => {
-    app(req, res);
-  }).catch(err => {
-    console.error('Database connection error:', err);
+module.exports = async (req, res) => {
+  try {
+    await connectToDatabase();
+    return app(req, res);
+  } catch (error) {
+    console.error('Serverless function error:', error);
     res.status(500).json({ message: 'Server error' });
-  });
+  }
 };
 
 // Also export the app for local testing
