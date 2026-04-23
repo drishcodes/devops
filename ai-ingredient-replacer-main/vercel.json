@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "buildCommand": "CI=false npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "build",
-  "framework": "create-react-app",
+  "devCommand": "npm start",
+  "installCommand": "npm install",
+  "framework": null,
   "rewrites": [
     {
       "source": "/api/(.*)",
